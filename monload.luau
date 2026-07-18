@@ -12,26 +12,6 @@ if not LocalPlayer then
     LocalPlayer = Players.LocalPlayer
 end
 
--- Base64 Decoder (Pure Lua, highly compatible, hides raw URLs from HTTP Sniffers)
-local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-local function decodeB64(data)
-    data = string.gsub(data, '[^'..b64chars..'=]', '')
-    return (data:gsub('.', function(x)
-        if (x == '=') then return '' end
-        local r, f = '', (b64chars:find(x) - 1)
-        for i = 6, 1, -1 do 
-            r = r .. (f % 2^i - f % 2^(i - 1) > 0 and '1' or '0') 
-        end
-        return r
-    end):gsub('%d%d%d%d%d%d%d%d', function(x)
-        local r = 0
-        for i = 1, 8 do 
-            r = r + (x:sub(i, i) == '1' and 2^(8 - i) or 0) 
-        end
-        return string.char(r)
-    end))
-end
-
 -- Safe Message Box Dialog (CoreGui protected)
 local function showError(title, body)
     local messagebox = messageboxasync or messagebox
@@ -43,7 +23,7 @@ local function showError(title, body)
 end
 
 -- Secured HTTP Downloader
-local function secureFetch(encodedUrl)
+local function secureFetch(url)
     local request = request or http_request or syn.request
     local loadstring = loadstring or eloadstring
     
@@ -57,9 +37,8 @@ local function secureFetch(encodedUrl)
         return nil
     end
 
-    local decodedUrl = decodeB64(encodedUrl)
     local success, response = pcall(request, {
-        Url = decodedUrl,
+        Url = url,
         Method = "GET",
         Headers = {
             ["User-Agent"] = "MonHubLoader/2.0",
@@ -93,13 +72,10 @@ local function secureFetch(encodedUrl)
     return loader
 end
 
--- ENCODED SCRIPT URL (Base64)
--- Replace this with your own Base64-encoded GitHub Raw URL!
--- Default encoded URL points to a placeholder.
--- Example of encoding "https://raw.githubusercontent.com/username/repo/main/combined_script.lua"
-local encodedScriptUrl = "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1NvZnRSYXRhdHVpL3Jpdm1haW4vcmVmcy9oZWFkcy9tYWluL3Jpdm1haW4ubHVhdQ=="
+-- RAW SCRIPT URL
+local scriptUrl = "https://raw.githubusercontent.com/SoftRatatui/rivmain/refs/heads/main/rivmain.luau"
 
-local runScript = secureFetch(encodedScriptUrl)
+local runScript = secureFetch(scriptUrl)
 if runScript then
     task.spawn(runScript)
 end
